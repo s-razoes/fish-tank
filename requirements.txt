@@ -1,0 +1,2 @@
+WebSocket==0.2.1
+SimpleWebSocketServer==0.1.1

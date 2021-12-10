@@ -1,0 +1,446 @@
+<html lang="en">
+<!-- Adapted from Toshiya Marukubo (www.twitter.com/toshiyamarukubo) -- https://codepen.io/dokinqs/pen/XWbRLmg -->
+<head>
+  <meta charset="UTF-8">
+  <title>Aquarium Console</title>
+<style>
+html, body {
+  height: 100%;
+  width: 100%;
+  font-family: Helvetica, verdana, monospace;
+  color: #FFFFFF;
+  font-size: 100%;
+  padding: 0;
+  margin: 0;
+  letter-spacing: 0.2rem;
+  overflow: hidden;
+  background: #373B44;  /* fallback for old browsers */
+  background: -webkit-linear-gradient(to bottom, #4286f4, #373B44);  /* Chrome 10-25, Safari 5.1-6 */
+  background: linear-gradient(to bottom, #4286f4, #373B44); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+a {
+  color: #FFF;
+  text-decoration: none;
+}
+
+h1 {
+  font-size: 1.6rem;
+}
+
+p {
+  padding: 0.8rem 0;
+  font-size: 0.8rem;
+}
+
+div#main {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 1.6rem;
+}
+
+p#loading {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  padding: 1.6rem;
+}
+
+/********************
+  Contents
+********************/
+
+canvas#canvas {
+  background: #373B44;  /* fallback for old browsers */
+  background: -webkit-linear-gradient(to bottom, #4286f4, #373B44);  /* Chrome 10-25, Safari 5.1-6 */
+  background: linear-gradient(to bottom, #4286f4, #373B44); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+
+.button {
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+
+.button1 {background-color: #4CAF50;} /* Green */
+.button2 {background-color: #008CBA;} /* Blue */
+.slidecontainer {
+  width: 100%;
+}
+
+.slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 25px;
+  background: #d3d3d3;
+  outline: none;
+  opacity: 0.7;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
+}
+
+.slider:hover {
+  opacity: 1;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 25px;
+  height: 25px;
+  background: #04AA6D;
+  cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+  width: 25px;
+  height: 25px;
+  background: #04AA6D;
+  cursor: pointer;
+}
+</style>
+<script>
+  window.console = window.console || function(t) {};
+</script>
+</head>
+<body translate="no">
+<div id="contents">
+<canvas id="canvas" >This browser cannot use a canvas.</canvas><br>
+<input type="range" min="5" max="50" value="5" class="slider" id="myRange" onchange="daFish.changeSize();">
+<!--<button class="button button1" onclick='daFish.plusSize();'>+</button>
+<button class="button button2" onclick='daFish.minusSize();'>-</button>-->
+<br><br><br><br><button class="button button1" onclick='daFish.changeColor();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Cor&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button><br><br><br><br>
+<!--<button class="button button2" onclick='moreBubbles();'>b+</button>
+<button class="button button1" onclick='lessBubbles();'>b-</button>-->
+<input type="range" min="0" max="500" value="10" class="slider" id="bubblesRange" onchange="changeBubbles();"><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+<button class="button button2" onclick='killFish();'>k</button><br>
+<button class="button button1" onclick='clearFish();'>cl</button><br>
+</div>
+<script id="rendered-js">
+
+var wsPort = '8091';
+var wsServer = window.location.hostname;//"localhost";//
+
+	//websocket
+	var wsocket = new WebSocket("ws://" + wsServer + ':' + wsPort);
+
+var biggestRadius = 50;
+var smallestRadius = 5;
+
+//important
+var colorIndex = 0;
+var radius = 5;
+
+var slider = document.getElementById('myRange');
+var bubblesR = document.getElementById('bubblesRange');
+
+    function rand(min, max) {
+      return Math.floor(Math.random() * (max - min + 1) + min);
+    }
+
+    var ctx = canvas.getContext('2d');
+    var X = canvas.width = window.innerWidth;
+    var Y = canvas.height = 400;//window.innerHeight/2;
+    var mouseX = null;
+    var mouseY = null;
+
+    window.requestAnimationFrame =
+    window.requestAnimationFrame ||
+    window.mozRequestAnimationFrame ||
+    window.webkitRequestAnimationFrame ||
+    window.msRequestAnimationFrame ||
+    function (cb) {
+      setTimeout(cb, 17);
+    };
+
+    var waves = [];
+
+    function Wave(ctx, x, y, r) {
+      this.ctx = ctx;
+      this.init(x, y, r);
+    }
+
+    Wave.prototype.init = function (x, y, r) {
+      this.x = x;
+      this.y = y;
+      this.r = r;
+      this.l = rand(100, 150);
+    };
+
+    Wave.prototype.draw = function () {
+      ctx = this.ctx;
+      ctx.save();
+      ctx.beginPath();
+      ctx.strokeStyle = 'rgb(149, 188, 249)';
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2, false);
+      ctx.stroke();
+      ctx.restore();
+    };
+
+    Wave.prototype.updateParams = function () {
+      this.r += 1;
+    };
+
+    Wave.prototype.deleteWave = function (i) {
+      if (this.r > this.l) {
+        waves.splice(i, 1);
+      }
+    };
+
+    Wave.prototype.render = function (i) {
+      this.updateParams();
+      this.deleteWave(i);
+      this.draw();
+    };
+
+    /********************
+      Fish
+    ********************/
+
+    var fishes = [];
+    var fishDir = [true, false];
+    var fishColors = ['255, 111, 147', '49, 194, 243', '255, 158, 0', '107, 136, 255','255, 0, 0','0,0,0', '255, 255, 255','0, 255, 0','255, 255, 0','255, 255, 0'];
+
+    function Fish(ctx, x, y, r, d, c) {
+      this.ctx = ctx;
+      this.init(x, y, r, d, c);
+    }
+	
+    Fish.prototype.init = function (x, y, r, d, c) {
+      this.d = d;
+      this.x = x;
+      this.y = y;
+      this.r = r;
+      this.c = c;
+      this.rad = this.a * Math.PI / 180;
+      if (this.d === true) {
+        this.v = {
+          x: rand(1, 2) * 0.5,
+          y: rand(-1, 1) * 0.5 };
+
+      } else {
+        this.v = {
+          x: rand(-2, -1) * 0.5,
+          y: rand(-1, 1) * 0.5 };
+
+      }
+    };
+
+    Fish.prototype.draw = function () {
+      ctx = this.ctx;
+      ctx.save();
+      ctx.beginPath();
+      ctx.fillStyle = 'rgb(' + this.c + ')';
+      ctx.scale(2, 1);
+      ctx.arc(this.x / 2, this.y, this.r, 0, Math.PI * 2, false);
+      ctx.fill();
+      ctx.beginPath();
+      if (this.d === true) {
+        ctx.moveTo(this.x / 2 + this.r / 2, this.y);
+        ctx.lineTo(this.x / 2 + this.r + this.r / 2, this.y + this.r / 2);
+        ctx.lineTo(this.x / 2 + this.r + this.r / 2, this.y - this.r / 2);
+      } else {
+        ctx.moveTo(this.x / 2 - this.r / 2, this.y);
+        ctx.lineTo(this.x / 2 - this.r - this.r / 2, this.y + this.r / 2);
+        ctx.lineTo(this.x / 2 - this.r - this.r / 2, this.y - this.r / 2);
+      }
+      ctx.fill();
+      ctx.restore();
+    };
+
+    Fish.prototype.updatePosition = function () {
+      this.x -= this.v.x;
+      this.y += this.v.y;
+    };
+
+    Fish.prototype.wrapPosition = function () {
+      if (this.x + this.r + this.r > X) {
+        this.v.x *= -1;
+        this.d = true;
+      }
+      if (this.x - this.r - this.r < 0) {
+        this.v.x *= -1;
+        this.d = false;
+      }
+      if (this.y + this.r > Y) {
+        this.v.y *= -1;
+      }
+      if (this.y - this.r < 0) {
+        this.v.y *= -1;
+      }
+    };
+
+    Fish.prototype.resize = function () {
+      this.x = rand(0, X);
+      this.y = rand(0, Y);
+    };
+
+    Fish.prototype.render = function () {
+      //this.updatePosition();
+      //this.wrapPosition();
+      this.draw();
+    };
+	
+	Fish.prototype.plusSize = function (){
+		ctx.clearRect(0, 0, X, Y);
+		radius = this.r = this.r + 1;
+		if(this.r > biggestRadius)
+			this.r = biggestRadius;
+		this.draw();
+	}
+
+	Fish.prototype.minusSize = function (){
+		ctx.clearRect(0, 0, X, Y);
+		radius = this.r = this.r - 1;
+		if(this.r < smallestRadius)
+			this.r = smallestRadius;
+		this.draw();
+	}
+
+	Fish.prototype.changeColor = function (){
+		ctx.clearRect(0, 0, X, Y);
+		colorIndex++;
+		if(colorIndex == fishColors.length)
+			colorIndex = 0;
+		this.c = fishColors[colorIndex];
+		this.draw();
+	}
+
+	Fish.prototype.changeSize = function (){
+		radius = this.r = parseInt(slider.value);
+		ctx.clearRect(0, 0, X, Y);
+		this.draw();
+	}
+	
+    /********************
+      Render
+    ********************/
+
+	let daFish = new Fish(ctx, canvas.width/2, canvas.height/2, smallestRadius, 0, fishColors[colorIndex]);
+daFish.render();
+/***********************************/
+    /*function render() {
+      ctx.clearRect(0, 0, X, Y);
+      /*for (var i = 0; i < fishes.length; i++) {
+        fishes[i].render();
+      }
+	  
+      //requestAnimationFrame(render);
+	  daFish.render();
+    }
+
+    render();*/
+
+    /********************
+      Event
+    ********************/
+
+    function onResize() {
+      X = canvas.width = window.innerWidth;
+      Y = canvas.height = window.innerHeight;
+      for (var i = 0; i < grasses.length; i++) {
+        grasses[i].resize();
+      }
+      for (var i = 0; i < bubbles.length; i++) {
+        bubbles[i].resize();
+      }
+    }
+
+    window.addEventListener('resize', function () {
+      onResize();
+    });
+	
+	var disableFish = false;
+	var toSend = null;
+	
+    canvas.addEventListener('click', function (e) {
+		if(disableFish) return;
+		disableFish = true;
+		ctx.clearRect(0, 0, X, Y);
+		var obj = {};
+		obj.action = 'f';
+		obj.c = colorIndex;
+		obj.r = radius;
+		//colorIndex = 0;
+		//daFish.c = fishColors[colorIndex];
+		//daFish.r = radius = smallestRadius;
+		toSend = JSON.stringify(obj);
+		setTimeout(function(){
+			disableFish = false;
+			//slider.value = 5;
+			daFish.render();
+		},500);
+		if(wsocket.readyState == wsocket.CLOSED || wsocket.readyState == wsocket.CLOSING){
+			wsocket = wsocket = new WebSocket("ws://" + wsServer + ':' + wsPort);
+		}else{
+			wsocket.send(toSend);
+			toSend = null;
+		}
+    }, false);
+
+	//new fish
+	function newFish(x,y,r,c){
+		if(x == null)
+			x = rand(0,canvas.width);
+		if(y == null)
+			y = rand(0,canvas.height);
+		if(r == null)
+			r = rand(5, 15);
+		if(c == null)
+			c = rand(0, fishColors.length - 1);
+		var fish = new Fish(ctx, x, y, r, fishDir[rand(0, 1)], fishColors[c]);
+		fishes.push(fish);
+		var wave = new Wave(ctx, x, y, 0);
+		waves.push(wave);
+	}
+
+
+	wsocket.onopen = function(e) {
+		if(toSend != null){
+			wsocket.send(toSend);
+			toSend = null;
+		}
+	};
+	
+	function changeBubbles(){
+		var obj = {};
+		obj.action = 'b';
+		obj.num = parseInt(bubblesR.value);
+		wsocket.send(JSON.stringify(obj));
+	}
+	
+	
+	function moreBubbles(){
+		var obj = {};
+		obj.action = 'b+';
+		wsocket.send(JSON.stringify(obj));
+	}
+	
+	function lessBubbles(){
+		var obj = {};
+		obj.action = 'b-';
+		wsocket.send(JSON.stringify(obj));
+	}
+	
+	function killFish(){
+		var obj = {};
+		obj.action = 'k';
+		wsocket.send(JSON.stringify(obj));
+	}
+	
+	function clearFish(){
+		var obj = {};
+		obj.action = 'c';
+		wsocket.send(JSON.stringify(obj));
+	}
+	
+</script>
+</body></html>
