@@ -72,7 +72,7 @@ canvas#canvas {
   <canvas id="canvas" width="1920" height="510">This browser cannot use a canvas.</canvas>
 </div>
 <script id="rendered-js">
-
+var maxFish = 50;
 var wsPort = '8091';
 var wsServer = window.location.hostname;//"localhost";//
 
@@ -208,10 +208,14 @@ var wsServer = window.location.hostname;//"localhost";//
       if (this.x + this.r + this.r > X) {
         this.v.x *= -1;
         this.d = true;
+        if(fishes.length > maxFish)
+          removeFish(this);
       }
       if (this.x - this.r - this.r < 0) {
         this.v.x *= -1;
         this.d = false;
+        if(fishes.length > maxFish)
+          removeFish(this);
       }
       if (this.y + this.r > Y) {
         this.v.y *= -1;
@@ -232,6 +236,17 @@ var wsServer = window.location.hostname;//"localhost";//
       this.draw();
     };
 
+  
+    function removeFish(fish){
+      for(var v=0; v<fishes.length; v++){
+        if(fishes[v] == fish)
+        {
+          fishes.splice(v,1);
+          break;
+        }
+      }
+    }
+  
     /********************
       Grass
     ********************/

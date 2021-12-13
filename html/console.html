@@ -109,6 +109,7 @@ canvas#canvas {
 </style>
 <script>
   window.console = window.console || function(t) {};
+  var daFish = null;
 </script>
 </head>
 <body translate="no">
@@ -130,7 +131,9 @@ var wsPort = '8091';
 var wsServer = window.location.hostname;//"localhost";//
 
 	//websocket
-	var wsocket = new WebSocket("ws://" + wsServer + ':' + wsPort);
+	//TODO 
+  var wsocket;
+  //= new WebSocket("ws://" + wsServer + ':' + wsPort);
 
 var biggestRadius = 50;
 var smallestRadius = 5;
@@ -241,6 +244,7 @@ var bubblesR = document.getElementById('bubblesRange');
       ctx.fillStyle = 'rgb(' + this.c + ')';
       ctx.scale(2, 1);
       ctx.arc(this.x / 2, this.y, this.r, 0, Math.PI * 2, false);
+      //ellipse(this.x , this.y, this.r, this.r-10, 0, Math.PI*2, false);
       ctx.fill();
       ctx.beginPath();
       if (this.d === true) {
@@ -284,8 +288,6 @@ var bubblesR = document.getElementById('bubblesRange');
     };
 
     Fish.prototype.render = function () {
-      //this.updatePosition();
-      //this.wrapPosition();
       this.draw();
     };
 	
@@ -324,7 +326,7 @@ var bubblesR = document.getElementById('bubblesRange');
       Render
     ********************/
 
-	let daFish = new Fish(ctx, canvas.width/2, canvas.height/2, smallestRadius, 0, fishColors[colorIndex]);
+	daFish = new Fish(ctx, canvas.width/2, canvas.height/2, smallestRadius, 0, fishColors[colorIndex]);
 daFish.render();
 /***********************************/
     /*function render() {
@@ -345,13 +347,7 @@ daFish.render();
 
     function onResize() {
       X = canvas.width = window.innerWidth;
-      Y = canvas.height = window.innerHeight;
-      for (var i = 0; i < grasses.length; i++) {
-        grasses[i].resize();
-      }
-      for (var i = 0; i < bubbles.length; i++) {
-        bubbles[i].resize();
-      }
+      daFish.draw();
     }
 
     window.addEventListener('resize', function () {
