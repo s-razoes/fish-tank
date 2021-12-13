@@ -131,9 +131,7 @@ var wsPort = '8091';
 var wsServer = window.location.hostname;//"localhost";//
 
 	//websocket
-	//TODO 
-  var wsocket;
-  //= new WebSocket("ws://" + wsServer + ':' + wsPort);
+  var wsocket = new WebSocket("ws://" + wsServer + ':' + wsPort);
 
 var biggestRadius = 50;
 var smallestRadius = 5;
