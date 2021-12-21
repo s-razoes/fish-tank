@@ -28,11 +28,7 @@ def serve():
 
     print("Starting websocket..." + WS_PORT)
     while True:
-        try:
-            server.serveforever()
-        except Exception as exc:
-            print(str(exc))
-            pass
+        server.serveforever()
 
 
 def serve_threaded():
