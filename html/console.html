@@ -71,7 +71,7 @@ canvas#canvas {
 }
 
 .button1 {background-color: #4CAF50;} /* Green */
-.button2 {background-color: #008CBA;} /* Blue */
+.button2 {background-color: #FF5733;} /* Red */
 .slidecontainer {
   width: 100%;
 }
@@ -115,13 +115,19 @@ canvas#canvas {
 <body translate="no">
 <div id="contents">
 <canvas id="canvas" >This browser cannot use a canvas.</canvas><br>
-<input type="range" min="5" max="50" value="5" class="slider" id="myRange" onchange="daFish.changeSize();">
+<input type="range" min="5" max="30" value="5" class="slider" id="myRange" onchange="daFish.changeSize();">
 <!--<button class="button button1" onclick='daFish.plusSize();'>+</button>
 <button class="button button2" onclick='daFish.minusSize();'>-</button>-->
-<br><br><br><br><button class="button button1" onclick='daFish.changeColor();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Cor&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button><br><br><br><br>
+<br><br><br><br><button class="button button1" onclick='daFish.changeColor();'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Cor&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</button>
+<button class="button button2" onclick='showNemo();'>Nemo TIME!!</button>
+<button class="button button2" onclick='noNemo();'>Remove Nemo!</button>
+<!--<button class="button button2" onclick='shark();'>SHARK TIME!!</button>-->
+<br><br><br><br>
 <!--<button class="button button2" onclick='moreBubbles();'>b+</button>
 <button class="button button1" onclick='lessBubbles();'>b-</button>-->
-<input type="range" min="0" max="500" value="10" class="slider" id="bubblesRange" onchange="changeBubbles();"><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+<input type="range" min="0" max="200" value="100" class="slider" id="shadeRange" onchange="changeShade();"><br>
+<input type="range" min="-10" max="10" value="0" class="slider" id="currentRange" onchange="changeCurrent();"><br>
+<input type="range" min="0" max="500" value="10" class="slider" id="bubblesRange" onchange="changeBubbles();"><br><br><br><br><br><br><br><br>
 <button class="button button2" onclick='killFish();'>k</button><br>
 <button class="button button1" onclick='clearFish();'>cl</button><br>
 </div>
@@ -142,6 +148,8 @@ var radius = 5;
 
 var slider = document.getElementById('myRange');
 var bubblesR = document.getElementById('bubblesRange');
+var shadeR = document.getElementById('shadeRange');
+var currentR = document.getElementById('currentRange');
 
     function rand(min, max) {
       return Math.floor(Math.random() * (max - min + 1) + min);
@@ -411,6 +419,19 @@ daFish.render();
 		wsocket.send(JSON.stringify(obj));
 	}
 	
+	function changeCurrent(){
+		var obj = {};
+		obj.action = 'current';
+		obj.num = parseInt(currentR.value) / 10;
+		wsocket.send(JSON.stringify(obj));
+	}
+	
+	function changeShade(){
+		var obj = {};
+		obj.action = 'shade';
+		obj.num = parseInt(shadeR.value)-100;
+		wsocket.send(JSON.stringify(obj));
+	}
 	
 	function moreBubbles(){
 		var obj = {};
@@ -435,6 +456,25 @@ daFish.render();
 		obj.action = 'c';
 		wsocket.send(JSON.stringify(obj));
 	}
+
+	function shark(){
+		var obj = {};
+		obj.action = 's';
+		wsocket.send(JSON.stringify(obj));
+	}
+
+	function showNemo(){
+		var obj = {};
+		obj.action = 'snemo';
+		wsocket.send(JSON.stringify(obj));
+	}
+
+	function noNemo(){
+		var obj = {};
+		obj.action = 'rnemo';
+		wsocket.send(JSON.stringify(obj));
+	}
+
 	
 </script>
 </body></html>
