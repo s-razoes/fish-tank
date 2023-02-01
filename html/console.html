@@ -137,7 +137,9 @@ var wsPort = '8091';
 var wsServer = window.location.hostname;//"localhost";//
 
 	//websocket
-  var wsocket = new WebSocket("ws://" + wsServer + ':' + wsPort);
+var toSend = 'status';
+var wsocket = new WebSocket("ws://" + wsServer + ':' + wsPort);
+//wsocket.send('status');
 
 var biggestRadius = 50;
 var smallestRadius = 5;
@@ -361,7 +363,6 @@ daFish.render();
     });
 	
 	var disableFish = false;
-	var toSend = null;
 	
     canvas.addEventListener('click', function (e) {
 		if(disableFish) return;
@@ -381,7 +382,7 @@ daFish.render();
 			daFish.render();
 		},500);
 		if(wsocket.readyState == wsocket.CLOSED || wsocket.readyState == wsocket.CLOSING){
-			wsocket = wsocket = new WebSocket("ws://" + wsServer + ':' + wsPort);
+			wsocket = new WebSocket("ws://" + wsServer + ':' + wsPort);
 		}else{
 			wsocket.send(toSend);
 			toSend = null;
@@ -475,6 +476,21 @@ daFish.render();
 		wsocket.send(JSON.stringify(obj));
 	}
 
+  wsocket.onmessage = function (event) {
+    var jo = JSON.parse(event.data);
+    if (jo.hasOwnProperty('shade')){
+      var elem = document.getElementById('shadeRange');
+      elem.value = parseInt(jo.shade) + 100;
+    }
+    if (jo.hasOwnProperty('b')){
+      var elem = document.getElementById('bubblesRange');
+      elem.value = parseInt(jo.b);
+    }
+    if (jo.hasOwnProperty('current')){
+      var elem = document.getElementById('currentRange');
+      elem.value = parseInt(jo.current) * 10;
+    }
+  }
 	
 </script>
 </body></html>
