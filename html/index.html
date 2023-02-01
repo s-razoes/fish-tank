@@ -772,6 +772,7 @@ window.addEventListener('load', function () {
 
   });
   document.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
       window.location.reload();
   });
 //})();
